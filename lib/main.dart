@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hn_app/article.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'src/article.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(MyApp());
 
@@ -28,7 +30,23 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Article> _articles = articles;
+  List<int> _ids = [
+    22276184,
+    22256872,
+    22266173,
+    22280753,
+    22261612,
+    22255914,
+    22272966,
+    22263721,
+    22284232
+  ];
+
+  Future<Article> _getArticle(int id) async {
+    final storyUrl = 'https://hacker-news.firebaseio.com/v0/item/$id.json';
+    final storyRes = await http.get(storyUrl);
+    if (storyRes.statusCode == 200) return parseArticle(storyRes.body);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,38 +54,40 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: RefreshIndicator(
-          onRefresh: () async {
-            await Future.delayed(const Duration(seconds: 1));
-            setState(() {
-              _articles.add(_articles[0]);
-              _articles.removeAt(0);
-            });
-          },
-          child: ListView(children: _articles.map(_buildItem).toList())),
+      body: ListView(
+          children: _ids
+              .map((i) => FutureBuilder<Article>(
+                    future: _getArticle(i),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done)
+                        return _buildItem(snapshot.data);
+                      else
+                        return Center(child: CircularProgressIndicator());
+                    },
+                  ))
+              .toList()),
     );
   }
 
   Widget _buildItem(Article article) {
     return Padding(
-      key: Key(article.domain),
+      key: Key(article.title),
       padding: const EdgeInsets.all(16.0),
       child: ExpansionTile(
         //subtitle: ,
         title: Text(
-          article.text,
-          style: TextStyle(fontSize: 32),
+          article.title,
+          style: TextStyle(fontSize: 24),
         ),
         children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              Text("${article.commentCount} comments"),
+              Text("${article.type}"),
               IconButton(
                   onPressed: () async {
-                    final fakeUrl = "http://${article.domain}";
-                    if (await canLaunch(fakeUrl)) {
-                      launch(Uri.encodeFull(fakeUrl));
+                    if (await canLaunch(article.url)) {
+                      launch(Uri.encodeFull(article.url));
                     }
                   },
                   icon: Icon(Icons.launch))
