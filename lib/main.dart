@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(
-        title: 'Flutter Demo Home Page',
+        title: 'Flutter Hacker News',
         hnBloc: hnBloc,
       ),
     );
@@ -55,6 +55,21 @@ class _MyHomePageState extends State<MyHomePage> {
         initialData: UnmodifiableListView<Article>([]),
         builder: (context, snapshot) => ListView(
             children: snapshot.data.map((f) => _buildItem(f)).toList()),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        items: [
+          BottomNavigationBarItem(
+              title: Text("Top Stories"), icon: Icon(Icons.receipt)),
+          BottomNavigationBarItem(
+              title: Text("New Stories"), icon: Icon(Icons.fiber_new)),
+        ],
+        onTap: (index) {
+          if (index == 0)
+            widget.hnBloc.storiesType.add(StoriesType.topStories);
+          else
+            widget.hnBloc.storiesType.add(StoriesType.newStories);
+        },
       ),
     );
   }

@@ -5,28 +5,37 @@ import 'dart:collection';
 
 import 'package:http/http.dart' as http;
 
+enum StoriesType { topStories, newStories }
+
 class HackerNewsBloc {
   final _articlesSubject = BehaviorSubject<UnmodifiableListView<Article>>();
 
   Stream<UnmodifiableListView<Article>> get articles => _articlesSubject.stream;
 
+  Sink<StoriesType> get storiesType => _storiesTypeController.sink;
+  final _storiesTypeController = StreamController<StoriesType>();
+
   var _articles = <Article>[];
 
   HackerNewsBloc() {
-    _updateArticles()
-        .then((_) => {_articlesSubject.add(UnmodifiableListView(_articles))});
+    _getArticlesAndUpdate(_topIds);
+
+    _storiesTypeController.stream.listen((storiesType) {
+      if (storiesType == StoriesType.newStories)
+        _getArticlesAndUpdate(_newIds);
+      else
+        _getArticlesAndUpdate(_topIds);
+    });
   }
 
-  List<int> _ids = [
+  static List<int> _newIds = [22255914, 22272966, 22263721, 22284232];
+
+  static List<int> _topIds = [
     22276184,
     22256872,
     22266173,
     22280753,
     22261612,
-    22255914,
-    22272966,
-    22263721,
-    22284232
   ];
 
   Future<Article> _getArticle(int id) async {
@@ -35,9 +44,14 @@ class HackerNewsBloc {
     if (storyRes.statusCode == 200) return parseArticle(storyRes.body);
   }
 
-  Future<Null> _updateArticles() async {
-    final futureArticles = _ids.map((id) => _getArticle(id));
+  Future<Null> _updateArticles(List<int> articleIds) async {
+    final futureArticles = articleIds.map((id) => _getArticle(id));
     final articles = await Future.wait(futureArticles);
     _articles = articles;
+  }
+
+  void _getArticlesAndUpdate(List<int> ids) {
+    _updateArticles(ids)
+        .then((_) => {_articlesSubject.add(UnmodifiableListView(_articles))});
   }
 }
