@@ -23,13 +23,13 @@ void main() {
     final url = 'https://hacker-news.firebaseio.com/v0/beststories.json';
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      final idList = json.jsonDecode(response.body);
+      final idList = parseTopStories(response.body);
       if (idList.isNotEmpty) {
         final storyUrl =
             'https://hacker-news.firebaseio.com/v0/item/${idList.first}.json';
         final storyRes = await http.get(storyUrl);
         if (storyRes.statusCode == 200) {
-          expect(parseArticle(storyRes.body).by, "lazyjeff");
+          expect(parseArticle(storyRes.body), isNotNull);
         }
       }
     }
