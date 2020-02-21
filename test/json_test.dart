@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hn_app/src/article.dart';
 import 'package:http/http.dart' as http;
 
-import 'dart:convert' as json;
-
 void main() {
   test("parse top stories", () {
     const jsonString =

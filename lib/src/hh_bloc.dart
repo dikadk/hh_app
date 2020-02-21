@@ -15,6 +15,9 @@ class HackerNewsBloc {
   Sink<StoriesType> get storiesType => _storiesTypeController.sink;
   final _storiesTypeController = StreamController<StoriesType>();
 
+  final _isLoadingSubject = BehaviorSubject<bool>.seeded(false);
+  Stream<bool> get isLoading => _isLoadingSubject.stream;
+
   var _articles = <Article>[];
 
   HackerNewsBloc() {
@@ -50,8 +53,11 @@ class HackerNewsBloc {
     _articles = articles;
   }
 
-  void _getArticlesAndUpdate(List<int> ids) {
-    _updateArticles(ids)
-        .then((_) => {_articlesSubject.add(UnmodifiableListView(_articles))});
+  void _getArticlesAndUpdate(List<int> ids) async {
+    _isLoadingSubject.add(true);
+    await _updateArticles(ids).then((_) {
+      _articlesSubject.add(UnmodifiableListView(_articles));
+      _isLoadingSubject.add(false);
+    });
   }
 }
